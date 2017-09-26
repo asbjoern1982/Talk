@@ -1,0 +1,5 @@
+# which port to listen to:
+server-port: 7000
+
+# choose which port to suggest on new contacts.
+default-suggest-port: 7000

@@ -5,6 +5,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -14,12 +17,19 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 public class ChatWindow extends Stage {
+	
+	private String name;
 	private Socket socket;
 	private DataOutputStream outStream;
 	private TextArea textArea;
 	private TextField input;
-	
+
 	public ChatWindow(Socket socket) {
+		this(null, socket);
+	}
+		
+	public ChatWindow(String name, Socket socket) {
+		this.name = name;
 		this.socket = socket;
 		try {
 			outStream = new DataOutputStream(socket.getOutputStream());
@@ -29,13 +39,21 @@ public class ChatWindow extends Stage {
 				try {
 					while(true) {
 						String inMessage = inStream.readLine();
-						Platform.runLater(() ->	textArea.setText(textArea.getText() + "you>" + inMessage + "\n"));
+						if (inMessage == null)
+							break;
+						String time = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
+						String username = name == null ? "unknown" : name; 
+						Platform.runLater(() ->	textArea.setText(textArea.getText() + time + " " + username + ">" + inMessage + "\n"));
 					}
+					inStream.close();
 				} catch (IOException e) {e.printStackTrace();}
 			}).start();
 		} catch (IOException e) {e.printStackTrace();}
 		
-		this.setTitle("chat");
+		if (name == null)
+			this.setTitle("chat");
+		else
+			this.setTitle("chat (" + name + ")");
 		
 		textArea = new TextArea();
 		input = new TextField();
@@ -57,7 +75,8 @@ public class ChatWindow extends Stage {
 		input.clear();
 		try {
 			outStream.writeBytes(outMessage + "\n");
-			textArea.setText(textArea.getText() + "me>" + outMessage + "\n");
+			String time = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
+			textArea.setText(textArea.getText() + time + ">" + outMessage + "\n");
 		} catch (IOException e) {e.printStackTrace();}
 	}
 }
